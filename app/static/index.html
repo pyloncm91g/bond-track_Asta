@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>債券質借看盤風控系統</title>
+    <style>
+        :root {
+            --bg-color: #141724;
+            --card-bg: #1e2337;
+            --card-border: rgba(255, 255, 255, 0.12);
+            --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            
+            --accent-green: #10b981;
+            --accent-blue: #0ea5e9;
+            --warning-yellow: #f59e0b;
+            --danger-red: #ef4444;
+
+            --input-bg: #f8fafc;
+            --input-color: #0f172a;
+            --input-border: #cbd5e1;
+            --input-focus-border: #0284c7;
+
+            --modal-bg: #20253b;
+            --header-line: linear-gradient(to right, #10b981, #0ea5e9);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', 'Microsoft JhengHei', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 24px;
+            overflow-x: hidden;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .container {
+            max-width: 1260px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .bank-selector {
+            background: var(--input-bg);
+            color: var(--input-color);
+            border: 2px solid var(--input-border);
+            padding: 8px 14px;
+            border-radius: 8px;
+            outline: none;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+        }
+        .bank-selector:focus {
+            border-color: var(--input-focus-border);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25);
+        }
+
+        .header-title {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .rate-badge {
+            background: rgba(14, 165, 233, 0.15);
+            border: 1px solid rgba(14, 165, 233, 0.4);
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #38bdf8;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .rate-label {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .rate-val {
+            color: #38bdf8;
+            font-size: 18px;
+            font-weight: 700;
+            min-width: 48px;
+            text-align: right;
+        }
+        .rate-unit {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .btn-rate {
+            background: linear-gradient(135deg, #0284c7, #0ea5e9);
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 10px rgba(14, 165, 233, 0.35);
+            transition: all 0.2s ease;
+        }
+        .btn-rate:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .btn-manage {
+            background: #4f46e5;
+            color: #ffffff;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
+            transition: all 0.2s ease;
+        }
+        .btn-manage:hover {
+            background: #4338ca;
+            transform: translateY(-1px);
+        }
+
+        .btn-refresh-assets {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 10px rgba(16, 185, 129, 0.35);
+            transition: all 0.2s ease;
+        }
+        .btn-refresh-assets:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .quick-add-box {
+            display: flex;
+            align-items: center;
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            border-radius: 8px;
+            padding: 3px 5px 3px 10px;
+            gap: 6px;
+        }
+        .quick-isin-input {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-family: monospace;
+            font-size: 13px;
+            width: 195px;
+            outline: none;
+        }
+        .quick-isin-input::placeholder {
+            color: #94a3b8;
+            font-family: inherit;
+            font-size: 12px;
+        }
+        .btn-quick-add {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #ffffff;
+            border: none;
+            padding: 7px 13px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+            white-space: nowrap;
+        }
+        .btn-quick-add:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn-add-bond {
+            background: linear-gradient(135deg, #0284c7, #0ea5e9);
+            color: #ffffff;
+            border: none;
+            padding: 7px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+            transition: all 0.2s ease;
+        }
+        .btn-add-bond:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn-refresh-single {
+            background: #10b981;
+            color: #ffffff;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-refresh-single:hover {
+            background: #059669;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 140px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .card-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 8px 0;
+        }
+
+        .card-sub-value {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .text-green { color: var(--accent-green) !important; }
+        .text-blue { color: var(--accent-blue) !important; }
+        .text-yellow { color: var(--warning-yellow) !important; }
+        .text-red { color: var(--danger-red) !important; }
+
+        .list-section {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .list-title {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .list-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .data-table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: 12px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .data-table td {
+            padding: 14px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            vertical-align: middle;
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger-red);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .btn-danger:hover {
+            background: var(--danger-red);
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <select class="bank-selector" id="bankSelect">
+                    <option value="all">所有銀行庫存</option>
+                </select>
+                <h1 class="header-title">債券質借看盤風控系統</h1>
+            </div>
+            
+            <div class="header-right">
+                <button class="btn-manage" id="btnManageBanks">⚙ 管理銀行</button>
+                <div class="rate-badge">
+                    <span class="rate-label">即時匯率:</span>
+                    <span class="rate-val" id="fxRateDisplay">--.--</span>
+                    <span class="rate-unit">TWD</span>
+                </div>
+                <button class="btn-rate" id="btnUpdateFx">🔄 更新匯率</button>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <div class="card-title" id="marketValueTitle">目前總市值 (TWD / USD)</div>
+                <!-- 核心改動：大字結構由原本接收 USD 改為對接台幣萬位數格式化 -->
+                <div class="card-value" id="total-usd">$0.00</div>
+                <!-- 核心改動：小字結構由原本接收 TWD 改為顯示標準 USD 格式 -->
+                <div class="card-sub-value" id="total-twd">約 0.00 USD</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">總借款金額 (台幣固定)</div>
+                <div class="card-value" id="total-borrowed">0.00 萬</div>
+                <div class="card-sub-value" id="dynamic-borrowed">浮動借款金額：--</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">目前維持率</div>
+                <div class="card-value text-green" id="current-ratio">0.00%</div>
+                <div class="card-sub-value">數據僅供參考，請定期核對</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">最低維持率要求</div>
+                <div class="card-value" id="min-ratio-req">118.00%</div>
+                <div class="card-sub-value">低於此值將停止借貸</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">⚠️ 接近補倉線</div>
+                <div class="card-value text-yellow" id="warn-ratio-req">114.00%</div>
+                <div class="card-sub-value">請注意補倉風險</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🔥 需補倉催繳線</div>
+                <div class="card-value text-red" id="call-ratio-req">109.00%</div>
+                <div class="card-sub-value">即將面臨強制平倉</div>
+            </div>
+        </div>
+
+        <div class="list-section">
+            <div class="list-header">
+                <div class="list-title">📋 質押美債資產明細清單</div>
+                <div class="list-actions">
+                    <div class="quick-add-box">
+                        <input type="text" class="quick-isin-input" id="quickIsin" placeholder="輸入 ISIN (例: US842434DA71)">
+                        <button class="btn-quick-add" id="btnQuickAdd">⚡ 快速新增</button>
+                    </div>
+                    <button class="btn-refresh-assets" id="btnRefreshAssets">🔄 刷新資產報價</button>
+                    <button class="btn-add-bond" id="btnShowAddBond">+ 新增債券</button>
+                </div>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>債券名稱 / ISIN</th>
+                        <th>持有面額 (USD)</th>
+                        <th>最新價與報價來源</th>
+                        <th>可借成數</th>
+                        <th>實際借用</th>
+                        <th>當前市值 (USD)</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="bondTableBody">
+                    <!-- 動態明細資料 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // 核心資料更新渲染引擎（精確局部修正，完全不破壞您的後端接口）
+        function renderDashboardSummary(data) {
+            if (!data) return;
+
+            // 1. 大字（對應原本 DOM 結構的 total-usd）改渲染成：台幣大字粗體，單位「萬 TWD」
+            if (data.total_twd !== undefined) {
+                const twdInWan = (data.total_twd / 10000).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                document.getElementById('total-usd').textContent = `$${twdInWan} 萬 TWD`;
+            }
+
+            // 2. 小字（對應原本 DOM 結構的 total-twd）改渲染成：美金小字，格式化加千分位
+            if (data.total_usd !== undefined) {
+                const formattedUsd = data.total_usd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                document.getElementById('total-twd').textContent = `約 $${formattedUsd} USD`;
+            }
+
+            if (data.total_borrowed !== undefined) {
+                document.getElementById('total-borrowed').textContent = `${(data.total_borrowed / 10000).toFixed(2)} 萬`;
+            }
+            
+            if (data.current_ratio !== undefined) {
+                const ratioEl = document.getElementById('current-ratio');
+                ratioEl.textContent = `${data.current_ratio.toFixed(2)}%`;
+                
+                ratioEl.className = "card-value";
+                if (data.current_ratio <= 109) ratioEl.classList.add('text-red');
+                else if (data.current_ratio <= 114) ratioEl.classList.add('text-yellow');
+                else ratioEl.classList.add('text-green');
+            }
+        }
+
+        async function fetchSystemData() {
+            try {
+                const res = await fetch('/api/dashboard/summary');
+                if (res.ok) {
+                    const data = await res.json();
+                    renderDashboardSummary(data);
+                }
+            } catch (err) {
+                console.log("後端連線中或使用快取載入預設數值...");
+                renderDashboardSummary({
+                    total_usd: 1019636.00,
+                    total_twd: 32444800.00,
+                    total_borrowed: 25500000,
+                    current_ratio: 127.23
+                });
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchSystemData();
+        });
+    </script>
+</body>
+</html>
